@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -18,34 +19,41 @@ namespace OpenJDKInstaller
             }
 
             // Remove the JAVA_HOME Env var
-            //Environment.SetEnvironmentVariable("JAVA_HOME", null, EnvironmentVariableTarget.Machine);
+            Environment.SetEnvironmentVariable("JAVA_HOME", null, EnvironmentVariableTarget.Machine);
 
             // Remove Java from the System PATH
-            String[] PATH = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine).Split(';');
+            String ENV_PATH = @"SYSTEM\CurrentControlSet\Control\Session Manager\Environment";
+            String PATH_RAW = Registry.LocalMachine.CreateSubKey(ENV_PATH).GetValue("Path", "", RegistryValueOptions.DoNotExpandEnvironmentNames).ToString();
+            String[] PATH_ARR = PATH_RAW.Split(';');
             String NEW_PATH = "";
 
-
-            for (int i = 0; i < PATH.Length; i++)
+            for (int i = 0; i < PATH_ARR.Length; i++)
             {
-
-                if (!PATH[i].ToLower().Contains(JAVA_FOLDER.ToString().ToLower()))
+                if (!PATH_ARR[i].ToLower().Contains("%java_home%") && !PATH_ARR[i].ToLower().Contains(@"c:\program files\java"))
                 {
                     int I_CHECK = (i + 1);
-                    if (I_CHECK >= PATH.Length )
+                    if (I_CHECK >= PATH_ARR.Length)
                     {
-                        NEW_PATH += (PATH[i]);
+                        NEW_PATH += PATH_ARR[i];
                     } else
                     {
-                        NEW_PATH += (PATH[i] + ";");
+                        NEW_PATH += (PATH_ARR[i] + ";");
                     }
-
                 }
             }
 
-            Console.WriteLine(Environment.GetEnvironmentVariable("PATH"));
-            Console.Read();
-            Environment.SetEnvironmentVariable("HOME_TEST", NEW_PATH, EnvironmentVariableTarget.Machine);
 
+            if (NEW_PATH.Split(';').Length >= 1)
+            {
+                Registry.LocalMachine.CreateSubKey(ENV_PATH).SetValue("Path", NEW_PATH);
+            } else
+            {
+                Console.WriteLine("Error Creating new path try again");
+                Console.WriteLine("Press enter to close");
+                Console.Read();
+                Environment.Exit(0);
+            }
+            Console.Read();
         }
     }
 }
