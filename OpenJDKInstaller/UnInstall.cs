@@ -12,7 +12,7 @@ namespace OpenJDKInstaller
         {
 
             // Delete the Java Folder
-            var JAVA_FOLDER = new DirectoryInfo(Directory.GetParent(Environment.GetEnvironmentVariable("JAVA_HOME").ToString()).ToString());
+            var JAVA_FOLDER = new DirectoryInfo(Directory.GetParent(Environment.GetEnvironmentVariable("JAVA_HOME", EnvironmentVariableTarget.Machine).ToString()).ToString());
             if (JAVA_FOLDER.Exists)
             {
                 JAVA_FOLDER.Delete(true);
@@ -53,7 +53,6 @@ namespace OpenJDKInstaller
                 Console.Read();
                 Environment.Exit(0);
             }
-            Console.Read();
         }
     }
 }

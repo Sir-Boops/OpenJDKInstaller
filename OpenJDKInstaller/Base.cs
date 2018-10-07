@@ -1,7 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -11,11 +14,12 @@ namespace OpenJDKInstaller
     {
         static void Main(string[] args)
         {
-
-            // Define OpenJDK versions
-            List<String> OPENJDK_LIST = new List<String>();
-            OPENJDK_LIST.Add("10");
-            OPENJDK_LIST.Add("11");
+            // Fetch OpenJDK json
+            WebClient client = new WebClient();
+            Stream stream = client.OpenRead("https://git.sergal.org/Sir-Boops/OpenJDKJSON/raw/branch/master/OpenJDK.json");
+            StreamReader reader = new StreamReader(stream);
+            String OPENJDK_JSON_RAW = reader.ReadToEnd();
+            OpenJDKJSON OPENJDK_JSON = JsonConvert.DeserializeObject<OpenJDKJSON>(OPENJDK_JSON_RAW);
 
             // Make sure we are on a 64-bit OS
             if (!System.Environment.Is64BitOperatingSystem)
@@ -28,7 +32,7 @@ namespace OpenJDKInstaller
 
             // Gen a String of supported openJDK versions
             String SUPPORTED_JDK_VER = "";
-            foreach (String ver in OPENJDK_LIST)
+            foreach (String ver in OPENJDK_JSON.supported_versions)
             {
                 SUPPORTED_JDK_VER += (ver + " ");
             }
@@ -41,7 +45,7 @@ namespace OpenJDKInstaller
             String REQUESTED_VERSION = Console.ReadLine();
 
             // Make sure the user requested something sane
-            if (!OPENJDK_LIST.Contains(REQUESTED_VERSION))
+            if (!OPENJDK_JSON.supported_versions.Contains(REQUESTED_VERSION))
             {
                 Console.WriteLine("You have to choose a supported version!");
                 Console.WriteLine("Press enter to close");
@@ -53,4 +57,10 @@ namespace OpenJDKInstaller
 
         }
     }
+
+    public class OpenJDKJSON
+    {
+        public String[] supported_versions { get; set; }
+    }
+
 }
